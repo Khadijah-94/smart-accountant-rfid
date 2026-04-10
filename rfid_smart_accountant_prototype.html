@@ -1,0 +1,357 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { direction: rtl; font-family: 'Segoe UI', Tahoma, sans-serif; }
+.app { padding: 1rem; }
+.tabs { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.tab { padding: 7px 14px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-secondary); }
+.tab.active { background: #0F6E56; color: #E1F5EE; border-color: #0F6E56; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+.card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.card-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.card-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.card-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+.section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem; margin-bottom: 1rem; }
+.section-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.rfid-zone { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 1.5rem; border: 1.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-lg); margin-bottom: 12px; }
+.rfid-icon { width: 64px; height: 64px; border-radius: 50%; background: #E1F5EE; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+.rfid-icon svg { width: 32px; height: 32px; }
+.rfid-icon.scanning { animation: pulse 0.6s ease-in-out 3; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+.btn { padding: 8px 18px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); cursor: pointer; font-size: 13px; font-family: inherit; }
+.btn-primary { background: #0F6E56; color: #E1F5EE; border-color: #0F6E56; }
+.btn-primary:hover { background: #085041; }
+.btn-secondary { background: var(--color-background-primary); color: var(--color-text-primary); }
+.product-select { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.product-btn { padding: 8px 10px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 12px; text-align: right; background: var(--color-background-secondary); color: var(--color-text-primary); transition: border-color 0.15s; }
+.product-btn:hover, .product-btn.selected { border-color: #0F6E56; background: #E1F5EE; color: #085041; }
+.op-select { display: flex; gap: 8px; margin-bottom: 10px; }
+.op-btn { flex: 1; padding: 7px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 12px; text-align: center; background: var(--color-background-secondary); color: var(--color-text-primary); }
+.op-btn.in { border-color: #1D9E75; background: #E1F5EE; color: #0F6E56; }
+.op-btn.out { border-color: #D85A30; background: #FAECE7; color: #993C1D; }
+.log-entry { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.log-entry:last-child { border-bottom: none; }
+.log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.dot-in { background: #1D9E75; }
+.dot-out { background: #D85A30; }
+.log-body { flex: 1; }
+.log-time { font-size: 11px; color: var(--color-text-tertiary); }
+.log-text { font-size: 13px; color: var(--color-text-primary); margin-top: 2px; }
+.log-entry-detail { font-size: 12px; color: var(--color-text-secondary); margin-top: 3px; }
+.journal-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.journal-table th { text-align: right; padding: 6px 8px; background: var(--color-background-secondary); color: var(--color-text-secondary); font-weight: 500; }
+.journal-table td { padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+.journal-table tr:last-child td { border-bottom: none; }
+.debit { color: #0F6E56; font-weight: 500; }
+.credit { color: #D85A30; font-weight: 500; }
+.badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 20px; }
+.badge-in { background: #E1F5EE; color: #0F6E56; }
+.badge-out { background: #FAECE7; color: #993C1D; }
+.inv-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.inv-row:last-child { border-bottom: none; }
+.inv-name { font-size: 13px; color: var(--color-text-primary); flex: 1; }
+.inv-qty { font-size: 13px; font-weight: 500; min-width: 40px; text-align: center; }
+.inv-bar-wrap { flex: 2; height: 6px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; }
+.inv-bar { height: 100%; border-radius: 3px; background: #1D9E75; transition: width 0.4s; }
+.inv-bar.low { background: #D85A30; }
+.status-ok { color: #0F6E56; font-size: 11px; }
+.status-low { color: #D85A30; font-size: 11px; }
+.scan-feedback { font-size: 13px; color: #0F6E56; font-weight: 500; min-height: 20px; text-align: center; }
+.hidden { display: none; }
+</style>
+
+<div class="app" dir="rtl">
+
+<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+  <div style="width:36px;height:36px;border-radius:8px;background:#0F6E56;display:flex;align-items:center;justify-content:center;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="4" height="10" rx="1" fill="#E1F5EE"/><rect x="8" y="4" width="2" height="16" rx="1" fill="#E1F5EE"/><rect x="12" y="7" width="2" height="10" rx="1" fill="#E1F5EE"/><rect x="16" y="4" width="2" height="16" rx="1" fill="#E1F5EE"/><rect x="20" y="7" width="2" height="10" rx="1" fill="#E1F5EE"/></svg>
+  </div>
+  <div>
+    <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);">المحاسب الذكي — RFID</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);">نموذج أولي تفاعلي · Prototype</div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-label">إجمالي المبيعات</div>
+    <div class="card-value" id="total-sales">0</div>
+    <div class="card-sub">ريال سعودي</div>
+  </div>
+  <div class="card">
+    <div class="card-label">عمليات اليوم</div>
+    <div class="card-value" id="total-ops">0</div>
+    <div class="card-sub">عملية مسجلة</div>
+  </div>
+  <div class="card">
+    <div class="card-label">دقة البيانات</div>
+    <div class="card-value" id="accuracy">100%</div>
+    <div class="card-sub">لا أخطاء يدوية</div>
+  </div>
+  <div class="card">
+    <div class="card-label">قيمة المخزون</div>
+    <div class="card-value" id="inv-value">5,800</div>
+    <div class="card-sub">ريال سعودي</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('scan')">محطة المسح</div>
+  <div class="tab" onclick="showTab('journal')">القيود المحاسبية</div>
+  <div class="tab" onclick="showTab('inventory')">المخزون</div>
+  <div class="tab" onclick="showTab('report')">التقارير</div>
+</div>
+
+<div id="tab-scan">
+  <div class="section">
+    <div class="section-title">اختر المنتج ونوع العملية</div>
+    <div class="product-select">
+      <button class="product-btn selected" onclick="selectProduct(this,'لابتوب',2500,'LAP-001')" id="p1">💻 لابتوب · 2,500 ر</button>
+      <button class="product-btn" onclick="selectProduct(this,'طابعة',800,'PRT-002')" id="p2">🖨️ طابعة · 800 ر</button>
+      <button class="product-btn" onclick="selectProduct(this,'شاشة',1200,'MON-003')" id="p3">🖥️ شاشة · 1,200 ر</button>
+      <button class="product-btn" onclick="selectProduct(this,'ماوس',150,'MSE-004')" id="p4">🖱️ ماوس · 150 ر</button>
+    </div>
+    <div class="op-select">
+      <button class="op-btn in" id="op-in" onclick="selectOp('in')">↓ استلام مخزون</button>
+      <button class="op-btn" id="op-out" onclick="selectOp('out')">↑ صرف / بيع</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">محطة RFID</div>
+    <div class="rfid-zone">
+      <div class="rfid-icon" id="rfid-icon">
+        <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="4" fill="#0F6E56"/><circle cx="16" cy="16" r="8" stroke="#1D9E75" stroke-width="1.5" fill="none" opacity="0.6"/><circle cx="16" cy="16" r="12" stroke="#5DCAA5" stroke-width="1" fill="none" opacity="0.3"/><circle cx="16" cy="16" r="15" stroke="#9FE1CB" stroke-width="0.5" fill="none" opacity="0.2"/></svg>
+      </div>
+      <div style="font-size:13px;color:var(--color-text-secondary);text-align:center;">اضغط لمحاكاة مرور المنتج أمام حساس RFID</div>
+      <div class="scan-feedback" id="scan-feedback"></div>
+      <button class="btn btn-primary" onclick="doScan()">مسح RFID ←</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">سجل العمليات الأخيرة</div>
+    <div id="log-container">
+      <div style="text-align:center;color:var(--color-text-tertiary);font-size:13px;padding:1rem 0;">لا توجد عمليات بعد · قم بمسح منتج للبدء</div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-journal" class="hidden">
+  <div class="section">
+    <div class="section-title">القيود المحاسبية التلقائية</div>
+    <div style="overflow-x:auto;">
+      <table class="journal-table">
+        <thead>
+          <tr>
+            <th>التاريخ والوقت</th>
+            <th>البيان</th>
+            <th>الحساب</th>
+            <th>مدين</th>
+            <th>دائن</th>
+            <th>نوع</th>
+          </tr>
+        </thead>
+        <tbody id="journal-body">
+          <tr><td colspan="6" style="text-align:center;color:var(--color-text-tertiary);padding:1rem;">سيتم إنشاء القيود تلقائياً عند مسح المنتجات</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="tab-inventory" class="hidden">
+  <div class="section">
+    <div class="section-title">حالة المخزون الحالية</div>
+    <div id="inv-list">
+      <div class="inv-row"><div class="inv-name">💻 لابتوب</div><div class="inv-qty" id="q-LAP-001">5</div><div class="inv-bar-wrap"><div class="inv-bar" id="b-LAP-001" style="width:50%"></div></div><div class="status-ok" id="s-LAP-001">جيد</div></div>
+      <div class="inv-row"><div class="inv-name">🖨️ طابعة</div><div class="inv-qty" id="q-PRT-002">8</div><div class="inv-bar-wrap"><div class="inv-bar" id="b-PRT-002" style="width:80%"></div></div><div class="status-ok" id="s-PRT-002">جيد</div></div>
+      <div class="inv-row"><div class="inv-name">🖥️ شاشة</div><div class="inv-qty" id="q-MON-003">3</div><div class="inv-bar-wrap"><div class="inv-bar" id="b-MON-003" style="width:30%"></div></div><div class="status-low" id="s-MON-003">منخفض</div></div>
+      <div class="inv-row"><div class="inv-name">🖱️ ماوس</div><div class="inv-qty" id="q-MSE-004">15</div><div class="inv-bar-wrap"><div class="inv-bar" id="b-MSE-004" style="width:100%"></div></div><div class="status-ok" id="s-MSE-004">جيد</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">مقارنة الدقة: RFID مقابل اليدوي</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="text-align:center;padding:12px;background:#E1F5EE;border-radius:var(--border-radius-md);">
+        <div style="font-size:11px;color:#0F6E56;margin-bottom:6px;">نظام RFID الذكي</div>
+        <div style="font-size:28px;font-weight:500;color:#0F6E56;" id="rfid-acc">100%</div>
+        <div style="font-size:11px;color:#1D9E75;">دقة تلقائية</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:#FAECE7;border-radius:var(--border-radius-md);">
+        <div style="font-size:11px;color:#993C1D;margin-bottom:6px;">الإدخال اليدوي التقليدي</div>
+        <div style="font-size:28px;font-weight:500;color:#D85A30;">43%</div>
+        <div style="font-size:11px;color:#993C1D;">نسبة خطأ مرتفعة</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-report" class="hidden">
+  <div class="section">
+    <div class="section-title">ملخص التقرير المالي الفوري</div>
+    <table class="journal-table">
+      <tr><th>البند</th><th>القيمة (ريال)</th></tr>
+      <tr><td>إجمالي المبيعات اليوم</td><td class="debit" id="r-sales">0</td></tr>
+      <tr><td>تكلفة البضاعة المباعة</td><td class="credit" id="r-cogs">0</td></tr>
+      <tr><td>مجمل الربح</td><td style="font-weight:500;" id="r-profit">0</td></tr>
+      <tr><td>عدد عمليات الاستلام</td><td id="r-in">0</td></tr>
+      <tr><td>عدد عمليات البيع/الصرف</td><td id="r-out">0</td></tr>
+      <tr><td>قيمة المخزون الحالية</td><td id="r-inv">5,800</td></tr>
+    </table>
+  </div>
+  <div class="section">
+    <div class="section-title">مؤشرات الأداء KPIs</div>
+    <div style="display:grid;gap:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <span style="font-size:13px;color:var(--color-text-secondary);">تقليل الأخطاء اليدوية</span>
+        <span style="font-size:13px;font-weight:500;color:#0F6E56;">57% ✓</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <span style="font-size:13px;color:var(--color-text-secondary);">دقة المخزون</span>
+        <span style="font-size:13px;font-weight:500;color:#0F6E56;" id="r-accuracy">100%</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <span style="font-size:13px;color:var(--color-text-secondary);">وقت تسجيل العملية</span>
+        <span style="font-size:13px;font-weight:500;color:#0F6E56;">&lt; 1 ثانية</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
+        <span style="font-size:13px;color:var(--color-text-secondary);">التدخل البشري</span>
+        <span style="font-size:13px;font-weight:500;color:#0F6E56;">صفر ✓</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let selProduct = {name:'لابتوب', price:2500, id:'LAP-001'};
+let selOp = 'in';
+let ops = 0, salesTotal = 0, inCount = 0, outCount = 0;
+let journals = [];
+let inventory = {'LAP-001':{qty:5,max:10,price:2500,emoji:'💻',name:'لابتوب'}, 'PRT-002':{qty:8,max:10,price:800,emoji:'🖨️',name:'طابعة'}, 'MON-003':{qty:3,max:10,price:1200,emoji:'🖥️',name:'شاشة'}, 'MSE-004':{qty:15,max:15,price:150,emoji:'🖱️',name:'ماوس'}};
+
+function showTab(t) {
+  ['scan','journal','inventory','report'].forEach(id => {
+    document.getElementById('tab-'+id).classList.add('hidden');
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.remove('hidden');
+  const tabs = ['scan','journal','inventory','report'];
+  document.querySelectorAll('.tab')[tabs.indexOf(t)].classList.add('active');
+  if(t==='inventory') updateInvUI();
+  if(t==='report') updateReport();
+}
+
+function selectProduct(el, name, price, id) {
+  document.querySelectorAll('.product-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  selProduct = {name, price, id};
+}
+
+function selectOp(op) {
+  selOp = op;
+  document.getElementById('op-in').className = 'op-btn' + (op==='in'?' in':'');
+  document.getElementById('op-out').className = 'op-btn' + (op==='out'?' out':'');
+}
+
+function doScan() {
+  const icon = document.getElementById('rfid-icon');
+  const fb = document.getElementById('scan-feedback');
+  icon.classList.add('scanning');
+  fb.textContent = 'جاري المسح...';
+  fb.style.color = '#888';
+  setTimeout(() => {
+    icon.classList.remove('scanning');
+    const inv = inventory[selProduct.id];
+    if(selOp === 'out' && inv.qty <= 0) {
+      fb.textContent = 'تحذير: لا يوجد مخزون كافٍ!';
+      fb.style.color = '#D85A30';
+      return;
+    }
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const dateStr = now.toLocaleDateString('ar-SA');
+    if(selOp === 'in') {
+      inv.qty = Math.min(inv.qty + 1, inv.max + 5);
+      inCount++;
+      fb.textContent = 'تم استلام ' + selProduct.name + ' بنجاح ✓';
+      fb.style.color = '#0F6E56';
+      addJournal(dateStr, timeStr, 'استلام مخزون - ' + selProduct.name, 'المخزون', 'المورد', selProduct.price, 'in');
+      addLog(timeStr, 'استلام: ' + selProduct.name, 'تم تسجيل قيد إضافة مخزون تلقائياً · RFID: ' + selProduct.id, 'in');
+    } else {
+      inv.qty = Math.max(inv.qty - 1, 0);
+      salesTotal += selProduct.price;
+      outCount++;
+      fb.textContent = 'تم بيع ' + selProduct.name + ' وتسجيل القيد ✓';
+      fb.style.color = '#1D9E75';
+      addJournal(dateStr, timeStr, 'بيع - ' + selProduct.name, 'النقدية', 'المبيعات', selProduct.price, 'out');
+      addJournal(dateStr, timeStr, 'تكلفة بضاعة مباعة - ' + selProduct.name, 'تكلفة البضاعة المباعة', 'المخزون', Math.round(selProduct.price * 0.7), 'out');
+      addLog(timeStr, 'بيع: ' + selProduct.name, 'تم تسجيل قيد البيع + تكلفة البضاعة تلقائياً · ' + selProduct.price + ' ر', 'out');
+    }
+    ops++;
+    document.getElementById('total-ops').textContent = ops;
+    document.getElementById('total-sales').textContent = salesTotal.toLocaleString('ar');
+    updateInvValueCard();
+  }, 900);
+}
+
+function updateInvValueCard() {
+  let total = 0;
+  Object.values(inventory).forEach(i => total += i.qty * i.price);
+  document.getElementById('inv-value').textContent = total.toLocaleString('ar');
+}
+
+function addLog(time, text, detail, type) {
+  const container = document.getElementById('log-container');
+  if(container.querySelector('div[style*="center"]')) container.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = '<div class="log-dot dot-' + type + '"></div><div class="log-body"><div class="log-time">' + time + '</div><div class="log-text">' + text + '</div><div class="log-entry-detail">' + detail + '</div></div>';
+  container.insertBefore(el, container.firstChild);
+}
+
+function addJournal(date, time, desc, debit, credit, amount, type) {
+  const tbody = document.getElementById('journal-body');
+  if(tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const badge = type === 'in' ? '<span class="badge badge-in">استلام</span>' : '<span class="badge badge-out">بيع</span>';
+  const row = document.createElement('tr');
+  row.innerHTML = '<td style="font-size:11px;color:var(--color-text-tertiary)">' + date + ' ' + time + '</td><td style="font-size:12px">' + desc + '</td><td style="font-size:12px">' + debit + ' / ' + credit + '</td><td class="debit">' + amount.toLocaleString('ar') + '</td><td class="credit">' + amount.toLocaleString('ar') + '</td><td>' + badge + '</td>';
+  tbody.insertBefore(row, tbody.firstChild);
+}
+
+function updateInvUI() {
+  Object.entries(inventory).forEach(([id, inv]) => {
+    const qEl = document.getElementById('q-'+id);
+    const bEl = document.getElementById('b-'+id);
+    const sEl = document.getElementById('s-'+id);
+    if(!qEl) return;
+    qEl.textContent = inv.qty;
+    const pct = Math.min((inv.qty / inv.max) * 100, 100);
+    bEl.style.width = pct + '%';
+    if(inv.qty <= 2) {
+      bEl.classList.add('low');
+      sEl.className = 'status-low';
+      sEl.textContent = 'منخفض';
+    } else {
+      bEl.classList.remove('low');
+      sEl.className = 'status-ok';
+      sEl.textContent = 'جيد';
+    }
+  });
+}
+
+function updateReport() {
+  const cogs = Math.round(salesTotal * 0.7);
+  document.getElementById('r-sales').textContent = salesTotal.toLocaleString('ar');
+  document.getElementById('r-cogs').textContent = cogs.toLocaleString('ar');
+  document.getElementById('r-profit').textContent = (salesTotal - cogs).toLocaleString('ar');
+  document.getElementById('r-in').textContent = inCount;
+  document.getElementById('r-out').textContent = outCount;
+  let invTotal = 0;
+  Object.values(inventory).forEach(i => invTotal += i.qty * i.price);
+  document.getElementById('r-inv').textContent = invTotal.toLocaleString('ar');
+  document.getElementById('r-accuracy').textContent = ops > 0 ? '98%' : '100%';
+}
+</script>
